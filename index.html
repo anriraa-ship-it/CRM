@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="DesignFlow"/>
+<meta name="theme-color" content="#1A1714"/>
+<title>DesignFlow CRM</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#1A1714;--ink2:#3D3831;--ink3:#7A7168;--ink4:#B5AFA8;
+  --cream:#F5F0EB;--cream2:#EDE7DF;--cream3:#E4DCD2;
+  --accent:#C4622D;--accent2:#E8894A;--accent3:#F5C49A;
+  --green:#3A7D5E;--blue:#2D6A8F;--violet:#6B4FA0;--rose:#B84C6E;
+  --white:#FDFAF7;--shadow:rgba(26,23,20,0.12);
+  --r:14px;--r2:20px;--r3:28px;
+  --font-display:'Playfair Display',serif;
+  --font-ui:'Syne',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--cream);font-family:var(--font-ui)}
+/* LAYOUT */
+#app{display:flex;height:100%;height:100dvh}
+/* SIDEBAR */
+#sidebar{
+  width:72px;background:var(--ink);display:flex;flex-direction:column;
+  align-items:center;padding:env(safe-area-inset-top,16px) 0 env(safe-area-inset-bottom,16px);
+  gap:4px;position:relative;z-index:100;flex-shrink:0;
+  transition:width .3s cubic-bezier(.4,0,.2,1);
+}
+#sidebar.expanded{width:240px}
+.sb-logo{
+  width:44px;height:44px;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-size:20px;color:#fff;font-weight:700;
+  margin:8px auto 20px;flex-shrink:0;cursor:pointer;
+  box-shadow:0 4px 16px rgba(196,98,45,.4);
+}
+.sb-logo-text{
+  font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px;
+  white-space:nowrap;overflow:hidden;opacity:0;transition:opacity .2s;
+}
+#sidebar.expanded .sb-logo-text{opacity:1}
+.sb-logo-wrap{display:flex;align-items:center;gap:10px;padding:0 14px;width:100%;margin-bottom:16px}
+.sb-nav{flex:1;display:flex;flex-direction:column;gap:2px;width:100%;padding:0 10px}
+.sb-item{
+  display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;
+  cursor:pointer;transition:background .15s;position:relative;color:var(--ink4);
+  white-space:nowrap;overflow:hidden;
+}
+.sb-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.sb-item.active{background:rgba(196,98,45,.2);color:var(--accent2)}
+.sb-item svg{flex-shrink:0;width:20px;height:20px}
+.sb-item-label{font-size:13.5px;font-weight:600;opacity:0;transition:opacity .2s}
+#sidebar.expanded .sb-item-label{opacity:1}
+.sb-badge{
+  position:absolute;top:8px;right:8px;background:var(--accent);color:#fff;
+  font-size:9px;font-weight:800;border-radius:99px;padding:1px 5px;
+  opacity:0;transition:opacity .2s;font-family:var(--font-mono);
+}
+#sidebar.expanded .sb-badge{opacity:1}
+.sb-divider{width:32px;height:1px;background:rgba(255,255,255,.1);margin:8px auto}
+#sidebar.expanded .sb-divider{width:calc(100% - 20px)}
+.sb-section{font-size:9px;font-weight:700;color:var(--ink4);letter-spacing:.1em;text-transform:uppercase;padding:0 12px;opacity:0;transition:opacity .2s;height:0;overflow:hidden}
+#sidebar.expanded .sb-section{opacity:1;height:auto;margin:8px 0 4px}
+.sb-team{padding:0 10px;display:flex;flex-direction:column;gap:2px}
+.sb-member{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .15s;overflow:hidden}
+.sb-member:hover{background:rgba(255,255,255,.06)}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--font-ui)}
+.sb-member-name{font-size:12px;color:rgba(255,255,255,.7);white-space:nowrap;opacity:0;transition:opacity .2s;font-weight:500}
+.sb-member-cnt{font-size:10px;color:var(--ink4);margin-left:auto;font-family:var(--font-mono);opacity:0;transition:opacity .2s}
+#sidebar.expanded .sb-member-name,.sb-member:hover .sb-member-name{opacity:1}
+#sidebar.expanded .sb-member-cnt{opacity:1}
+.sb-toggle{
+  width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:background .15s;color:var(--ink4);margin-bottom:4px;flex-shrink:0;
+}
+.sb-toggle:hover{background:rgba(255,255,255,.18);color:#fff}
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+/* TOPBAR */
+#topbar{
+  background:var(--white);border-bottom:1.5px solid var(--cream3);
+  padding:0 24px;height:62px;display:flex;align-items:center;gap:12px;
+  flex-shrink:0;padding-top:env(safe-area-inset-top,0);
+}
+.tb-title{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink);margin-right:auto}
+.tb-title span{color:var(--accent)}
+.search-wrap{position:relative;flex:1;max-width:320px}
+.search-wrap input{
+  width:100%;background:var(--cream2);border:1.5px solid transparent;border-radius:12px;
+  padding:9px 14px 9px 38px;font-size:13px;font-family:var(--font-ui);color:var(--ink);
+  outline:none;transition:border-color .2s,background .2s;
+}
+.search-wrap input:focus{background:var(--white);border-color:var(--accent3)}
+.search-wrap input::placeholder{color:var(--ink4)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink4);pointer-events:none}
+.filter-chip{
+  display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;
+  background:var(--cream2);border:1.5px solid var(--cream3);cursor:pointer;
+  font-size:12px;font-weight:600;color:var(--ink2);transition:all .15s;white-space:nowrap;
+}
+.filter-chip:hover,.filter-chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.filter-chip select{background:none;border:none;outline:none;cursor:pointer;font-size:12px;font-weight:600;color:inherit;font-family:var(--font-ui)}
+.btn-primary{
+  display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:12px;
+  background:var(--ink);color:#fff;border:none;cursor:pointer;
+  font-size:13px;font-weight:700;font-family:var(--font-ui);
+  transition:transform .1s,box-shadow .15s;
+  box-shadow:0 2px 8px rgba(26,23,20,.2);white-space:nowrap;
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(26,23,20,.25)}
+.btn-primary:active{transform:translateY(0)}
+/* STATS BAR */
+#statsbar{
+  display:flex;gap:12px;padding:16px 24px;background:var(--white);
+  border-bottom:1.5px solid var(--cream3);flex-shrink:0;overflow-x:auto;
+}
+.stat-card{
+  background:var(--cream2);border-radius:16px;padding:14px 20px;
+  display:flex;align-items:center;gap:14px;flex-shrink:0;min-width:160px;
+  border:1.5px solid var(--cream3);transition:transform .15s;cursor:default;
+}
+.stat-card:hover{transform:translateY(-1px)}
+.stat-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.stat-val{font-size:26px;font-weight:800;color:var(--ink);font-family:var(--font-display);line-height:1}
+.stat-lbl{font-size:11px;color:var(--ink3);font-weight:600;margin-top:2px}
+/* CONTENT */
+#content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+/* VIEW TABS */
+.view-tabs{display:flex;gap:2px;padding:14px 24px 0;background:var(--white)}
+.view-tab{
+  padding:8px 18px;border-radius:10px 10px 0 0;font-size:13px;font-weight:700;
+  cursor:pointer;color:var(--ink3);background:var(--cream2);border:1.5px solid var(--cream3);
+  border-bottom:none;transition:all .15s;font-family:var(--font-ui);
+}
+.view-tab.active{background:var(--cream);color:var(--ink);border-color:var(--cream3);border-bottom:1.5px solid var(--cream)}
+/* SCROLL AREA */
+.scroll-area{flex:1;overflow:auto;padding:20px 24px;-webkit-overflow-scrolling:touch}
+/* KANBAN */
+.kanban{display:flex;gap:16px;align-items:flex-start;min-width:fit-content;min-height:100%}
+.k-col{
+  width:280px;background:var(--cream2);border-radius:var(--r2);
+  padding:16px 14px;border:1.5px solid var(--cream3);flex-shrink:0;
+  transition:background .15s;min-height:400px;
+}
+.k-col.drag-over{background:var(--cream3);border-color:var(--accent3)}
+.k-col-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.k-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.k-col-title{font-size:12px;font-weight:800;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em;flex:1}
+.k-count{background:var(--cream3);border-radius:99px;padding:2px 8px;font-size:11px;font-weight:700;color:var(--ink3);font-family:var(--font-mono)}
+/* TASK CARD */
+.task-card{
+  background:var(--white);border-radius:var(--r);padding:14px;
+  margin-bottom:8px;cursor:pointer;border:1.5px solid var(--cream3);
+  transition:transform .15s,box-shadow .15s;
+  box-shadow:0 1px 4px var(--shadow);position:relative;overflow:hidden;
+}
+.task-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);opacity:0;transition:opacity .15s}
+.task-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(26,23,20,.12)}
+.task-card:hover::before{opacity:1}
+.task-card:active{transform:scale(.98)}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tag{border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;letter-spacing:.02em;font-family:var(--font-mono)}
+.card-title{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.45;margin-bottom:10px;font-family:var(--font-ui)}
+.card-footer{display:flex;align-items:center;justify-content:space-between}
+.card-meta{display:flex;align-items:center;gap:8px}
+.card-pts{font-size:11px;font-family:var(--font-mono);background:var(--cream2);border-radius:6px;padding:3px 7px;color:var(--ink3);font-weight:500}
+.card-comment{font-size:11px;color:var(--ink4)}
+/* LIST VIEW */
+.list-view{display:flex;flex-direction:column;gap:8px}
+.list-item{
+  background:var(--white);border-radius:14px;padding:14px 20px;
+  display:flex;align-items:center;gap:16px;border:1.5px solid var(--cream3);
+  cursor:pointer;transition:all .15s;
+}
+.list-item:hover{border-color:var(--accent3);box-shadow:0 2px 12px var(--shadow)}
+.list-item-title{flex:1;font-size:14px;font-weight:600;color:var(--ink)}
+.list-item-type{font-size:15px}
+/* SPRINT VIEW */
+.sprint-wrap{display:flex;flex-direction:column;gap:20px}
+.sprint-block{background:var(--white);border-radius:var(--r2);border:1.5px solid var(--cream3);overflow:hidden}
+.sprint-head{
+  padding:18px 22px;display:flex;align-items:center;gap:14px;
+  border-bottom:1.5px solid var(--cream2);cursor:pointer;
+  background:var(--white);transition:background .15s;
+}
+.sprint-head:hover{background:var(--cream2)}
+.sprint-name{font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--ink)}
+.sprint-info{font-size:12px;color:var(--ink3);font-family:var(--font-mono)}
+.sprint-progress{flex:1;max-width:200px}
+.progress-bar{height:6px;background:var(--cream3);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s cubic-bezier(.4,0,.2,1)}
+.sprint-pct{font-size:11px;font-weight:700;color:var(--accent);font-family:var(--font-mono);margin-top:4px}
+.sprint-body{padding:12px}
+.sprint-row{
+  display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;
+  cursor:pointer;transition:background .12s;
+}
+.sprint-row:hover{background:var(--cream2)}
+.sprint-row-title{flex:1;font-size:13.5px;font-weight:600;color:var(--ink)}
+/* MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(26,23,20,.55);z-index:500;
+  display:flex;align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(4px);animation:fadeIn .2s;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-sheet{
+  background:var(--white);border-radius:28px 28px 0 0;width:100%;max-width:760px;
+  max-height:92vh;overflow:hidden;display:flex;flex-direction:column;
+  animation:slideUp .3s cubic-bezier(.4,0,.2,1);
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:40px;height:4px;background:var(--cream3);border-radius:99px;margin:12px auto 0}
+.modal-scroll{overflow-y:auto;flex:1;padding:20px 28px 28px;-webkit-overflow-scrolling:touch}
+.modal-header{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.modal-title{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px;line-height:1.3}
+.modal-desc{font-size:14px;color:var(--ink3);line-height:1.65}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--cream2);border-radius:16px;padding:16px;margin:20px 0;border:1.5px solid var(--cream3)}
+.modal-field label{font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:6px}
+.modal-field-val{font-size:13.5px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px}
+.modal-actions{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.btn-sec{
+  padding:8px 16px;border-radius:10px;background:var(--cream2);border:1.5px solid var(--cream3);
+  cursor:pointer;font-size:12.5px;font-weight:700;color:var(--ink2);font-family:var(--font-ui);
+  transition:all .15s;
+}
+.btn-sec:hover{background:var(--cream3)}
+.btn-danger{background:#FEE2E2;color:#DC2626;border-color:#FECACA}
+.btn-danger:hover{background:#FECACA}
+/* COMMENTS */
+.comment-section{margin-top:20px;border-top:1.5px solid var(--cream3);padding-top:20px}
+.comment-title{font-size:13px;font-weight:800;color:var(--ink2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.comment-item{display:flex;gap:10px;margin-bottom:14px}
+.comment-bubble{background:var(--cream2);border-radius:0 12px 12px 12px;padding:10px 14px;flex:1;border:1.5px solid var(--cream3)}
+.comment-author{font-size:11px;font-weight:700;color:var(--ink2)}
+.comment-date{font-size:10px;color:var(--ink4);font-family:var(--font-mono);margin-left:6px}
+.comment-text{font-size:13px;color:var(--ink3);margin-top:4px;line-height:1.55}
+.comment-input-wrap{display:flex;gap:8px;margin-top:12px}
+.comment-input{
+  flex:1;background:var(--cream2);border:1.5px solid var(--cream3);border-radius:12px;
+  padding:10px 14px;font-size:13px;font-family:var(--font-ui);color:var(--ink);outline:none;
+  transition:border-color .2s;
+}
+.comment-input:focus{border-color:var(--accent);background:var(--white)}
+.comment-send{
+  width:42px;height:42px;background:var(--ink);border:none;border-radius:12px;
+  color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background .15s;
+}
+.comment-send:hover{background:var(--accent)}
+/* CREATE FORM */
+.create-form{display:flex;flex-direction:column;gap:14px}
+.form-group label{font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px}
+.form-input,.form-select,.form-textarea{
+  width:100%;background:var(--cream2);border:1.5px solid var(--cream3);border-radius:12px;
+  padding:10px 14px;font-size:13.5px;font-family:var(--font-ui);color:var(--ink);outline:none;
+  transition:border-color .2s,background .2s;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);background:var(--white)}
+.form-textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-footer{display:flex;gap:10px;padding-top:4px}
+/* EMPTY STATE */
+.empty{text-align:center;padding:48px 20px;color:var(--ink4)}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:.5}
+.empty-text{font-size:15px;font-weight:600}
+/* EDIT INLINE */
+.edit-input{
+  width:100%;background:var(--cream);border:1.5px solid var(--accent3);border-radius:10px;
+  padding:8px 12px;font-size:inherit;font-family:inherit;font-weight:inherit;color:var(--ink);
+  outline:none;margin-bottom:8px;
+}
+/* PRIORITY DOTS */
+.prio-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+/* RESPONSIVE TABLET */
+@media(max-width:900px){
+  #sidebar{width:60px}
+  #sidebar.expanded{width:220px;position:absolute;height:100%;z-index:200}
+  .scroll-area{padding:16px}
+  #statsbar{padding:12px 16px}
+  #topbar{padding:0 16px;padding-top:env(safe-area-inset-top,0)}
+  .k-col{width:255px}
+  .form-row{grid-template-columns:1fr}
+  .modal-scroll{padding:16px 20px 24px}
+}
+@media(max-width:600px){
+  #statsbar{display:none}
+  .search-wrap{max-width:180px}
+  .tb-title{font-size:18px}
+  .k-col{width:240px}
+  .filter-chip span.fc-label{display:none}
+  .modal-grid{grid-template-columns:1fr}
+}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--cream3);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink4)}
+/* DRAG */
+.dragging{opacity:.5;transform:rotate(1deg)}
+.drop-target{border:2px dashed var(--accent)!important}
+/* INSTALL BANNER */
+#install-banner{
+  position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;
+  padding:14px 20px;border-radius:16px;display:flex;align-items:center;gap:12px;
+  font-size:13px;font-weight:600;z-index:999;box-shadow:0 8px 32px rgba(26,23,20,.3);
+  animation:slideUp .3s cubic-bezier(.4,0,.2,1);
+}
+#install-banner button{background:var(--accent);border:none;color:#fff;padding:7px 14px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font-ui)}
+#install-banner .dismiss{background:none;border:none;color:var(--ink4);cursor:pointer;font-size:18px;line-height:1;padding:0}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-logo-wrap">
+      <div class="sb-logo" onclick="toggleSidebar()">Д</div>
+      <span class="sb-logo-text">DesignFlow</span>
+    </div>
+    <div class="sb-nav" id="sb-nav"></div>
+    <div class="sb-divider"></div>
+    <div class="sb-section">Команда</div>
+    <div class="sb-team" id="sb-team"></div>
+    <div class="sb-divider"></div>
+    <div class="sb-toggle" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="topbar">
+      <div class="tb-title" id="tb-title">Доска <span>проекта</span></div>
+      <div class="search-wrap">
+        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="search-input" placeholder="Поиск задач…" oninput="applyFilters()"/>
+      </div>
+      <div class="filter-chip">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"/></svg>
+        <span class="fc-label">Приоритет</span>
+        <select id="filter-priority" onchange="applyFilters()">
+          <option value="">Все</option>
+          <option>Низкий</option><option>Средний</option><option>Высокий</option><option>Критический</option>
+        </select>
+      </div>
+      <div class="filter-chip">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="fc-label">Исполнитель</span>
+        <select id="filter-assignee" onchange="applyFilters()">
+          <option value="">Все</option>
+          <option>Артём</option><option>Дарья</option><option>Кирилл</option><option>Наташа</option><option>Вика</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="openCreate()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Задача
+      </button>
+    </div>
+
+    <div id="statsbar"></div>
+
+    <div id="content">
+      <div class="view-tabs" id="view-tabs"></div>
+      <div class="scroll-area" id="scroll-area"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal-sheet" id="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-scroll" id="modal-content"></div>
+  </div>
+</div>
+
+<div id="install-banner" style="display:none">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  Установить DesignFlow на экран
+  <button id="install-btn">Установить</button>
+  <button class="dismiss" onclick="document.getElementById('install-banner').style.display='none'">✕</button>
+</div>
+
+<script>
+// ============ DATA ============
+const PRIORITIES = ['Низкий','Средний','Высокий','Критический'];
+const PRIO_COLORS = {Низкий:'#3A7D5E',Средний:'#C4622D',Высокий:'#B84C6E',Критический:'#6B4FA0'};
+const PRIO_BG = {Низкий:'#E8F5EF',Средний:'#FBF0EB',Высокий:'#FDEEF3',Критический:'#F0EBF8'};
+const STATUSES = ['Бэклог','К выполнению','В работе','Ревью','Готово'];
+const STATUS_COLORS = {'Бэклог':'#B5AFA8','К выполнению':'#2D6A8F','В работе':'#C4622D','Ревью':'#6B4FA0','Готово':'#3A7D5E'};
+const STATUS_BG = {'Бэклог':'#F2EFEC','К выполнению':'#EBF3F9','В работе':'#FBF0EB','Ревью':'#F0EBF8','Готово':'#E8F5EF'};
+const TYPES = ['Задача','Баг','Фича','Исследование','Правки','Брифинг'];
+const TYPE_ICONS = {Задача:'✦',Баг:'◆',Фича:'◉',Исследование:'◎',Правки:'◈',Брифинг:'◐'};
+const MEMBERS = ['Артём','Дарья','Кирилл','Наташа','Вика'];
+const MEMBER_COLORS = ['#C4622D','#6B4FA0','#2D6A8F','#B84C6E','#3A7D5E'];
+const SPRINTS_LIST = ['Спринт 1','Спринт 2','Спринт 3','Бэклог'];
+const VIEWS = [
+  {key:'kanban',label:'Доска'},
+  {key:'backlog',label:'Бэклог'},
+  {key:'sprints',label:'Спринты'},
+  {key:'list',label:'Список'},
+];
+const NAV = [
+  {key:'kanban',label:'Доска',icon:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'},
+  {key:'backlog',label:'Бэклог',icon:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>'},
+  {key:'sprints',label:'Спринты',icon:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'},
+  {key:'list',label:'Список',icon:'<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>'},
+];
+
+let tasks = [
+  {id:1,title:'Редизайн главной страницы сайта',type:'Фича',status:'В работе',priority:'Высокий',assignee:'Дарья',sprint:'Спринт 1',points:8,description:'Обновить лендинг под новый брендбук 2024. Все блоки согласовать с клиентом.',comments:[{author:'Артём',text:'Макеты готовы, жду фидбэк',date:'22 мая'}]},
+  {id:2,title:'Создать брендбук для клиента TechCorp',type:'Задача',status:'К выполнению',priority:'Критический',assignee:'Наташа',sprint:'Спринт 1',points:13,description:'Разработка полного брендбука включая логотип, типографику, цветовую палитру и паттерны.',comments:[]},
+  {id:3,title:'Анимация логотипа',type:'Правки',status:'Бэклог',priority:'Средний',assignee:'Кирилл',sprint:'Бэклог',points:3,description:'Добавить motion-анимацию к логотипу для использования в видео.',comments:[{author:'Дарья',text:'Ориентир — референс от клиента',date:'20 мая'}]},
+  {id:4,title:'Оформить кейс в портфолио',type:'Задача',status:'Готово',priority:'Низкий',assignee:'Артём',sprint:'Спринт 1',points:2,description:'Оформить кейс проекта Foodly для сайта-портфолио студии.',comments:[]},
+  {id:5,title:'UX-исследование новых пользователей',type:'Исследование',status:'Ревью',priority:'Высокий',assignee:'Вика',sprint:'Спринт 2',points:8,description:'Провести 5 пользовательских интервью и составить карту пути пользователя.',comments:[{author:'Наташа',text:'Отчёт отправлен на согласование',date:'24 мая'}]},
+  {id:6,title:'Правки по итогам встречи с клиентом',type:'Правки',status:'К выполнению',priority:'Критический',assignee:'Дарья',sprint:'Спринт 1',points:5,description:'Правки по слайдам: шрифты, отступы, цвета кнопок.',comments:[]},
+  {id:7,title:'Разработать иконки для приложения',type:'Задача',status:'В работе',priority:'Средний',assignee:'Кирилл',sprint:'Спринт 2',points:5,description:'24 иконки в стиле outline для мобильного приложения.',comments:[]},
+  {id:8,title:'Составить бриф для нового клиента',type:'Брифинг',status:'Бэклог',priority:'Средний',assignee:'Артём',sprint:'Бэклог',points:2,description:'Подготовить стандартный бриф для онбординга нового клиента в CRM.',comments:[]},
+  {id:9,title:'Баг: неверное отображение шрифта на IE',type:'Баг',status:'Бэклог',priority:'Низкий',assignee:'Вика',sprint:'Бэклог',points:1,description:'На IE 11 не подгружается Syne, фоллбэк не настроен.',comments:[]},
+];
+let nextId = 10;
+let currentView = 'kanban';
+let activeSprint = 'Спринт 1';
+let draggingId = null;
+let sidebarExpanded = false;
+
+// ============ UTILS ============
+function av(name,size=28){
+  const i = MEMBERS.indexOf(name);
+  const c = MEMBER_COLORS[i>=0?i:0];
+  return `<div class="av" style="width:${size}px;height:${size}px;background:${c};font-size:${Math.round(size*.38)}px;">${name[0]}</div>`;
+}
+function tag(label,color,bg){
+  return `<span class="tag" style="background:${bg};color:${color};">${label}</span>`;
+}
+function prioBadge(p){return tag(p,PRIO_COLORS[p],PRIO_BG[p]);}
+function statusBadge(s){return tag(s,STATUS_COLORS[s],STATUS_BG[s]);}
+function typeBadge(t){return tag(TYPE_ICONS[t]+' '+t,'#7A7168','#EDE7DF');}
+function filtered(){
+  const q=(document.getElementById('search-input')||{}).value?.toLowerCase()||'';
+  const fp=document.getElementById('filter-priority')?.value||'';
+  const fa=document.getElementById('filter-assignee')?.value||'';
+  return tasks.filter(t=>{
+    const mq=!q||t.title.toLowerCase().includes(q)||t.description.toLowerCase().includes(q);
+    const mp=!fp||t.priority===fp;
+    const ma=!fa||t.assignee===fa;
+    return mq&&mp&&ma;
+  });
+}
+
+// ============ SIDEBAR ============
+function buildSidebar(){
+  const nav=document.getElementById('sb-nav');
+  nav.innerHTML=NAV.map(n=>{
+    const cnt=tasks.filter(t=>t.status!=='Готово').length;
+    const badge=n.key==='kanban'?`<span class="sb-badge">${cnt}</span>`:'';
+    return `<div class="sb-item${currentView===n.key?' active':''}" onclick="setView('${n.key}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${n.icon}</svg>
+      <span class="sb-item-label">${n.label}</span>${badge}
+    </div>`;
+  }).join('');
+  const team=document.getElementById('sb-team');
+  team.innerHTML=MEMBERS.map(m=>{
+    const i=MEMBERS.indexOf(m);const c=MEMBER_COLORS[i];
+    const cnt=tasks.filter(t=>t.assignee===m&&t.status!=='Готово').length;
+    return `<div class="sb-member"><div class="av" style="width:26px;height:26px;background:${c};font-size:10px;">${m[0]}</div><span class="sb-member-name">${m}</span><span class="sb-member-cnt">${cnt}</span></div>`;
+  }).join('');
+}
+function toggleSidebar(){
+  sidebarExpanded=!sidebarExpanded;
+  document.getElementById('sidebar').classList.toggle('expanded',sidebarExpanded);
+}
+
+// ============ STATS ============
+function buildStats(){
+  const t=tasks;
+  const done=t.filter(x=>x.status==='Готово').length;
+  const inprog=t.filter(x=>x.status==='В работе').length;
+  const pts=t.filter(x=>x.sprint===activeSprint).reduce((a,x)=>a+x.points,0);
+  const data=[
+    {icon:'◉',label:'Всего задач',val:t.length,bg:'#FBF0EB',ic:'#C4622D'},
+    {icon:'✦',label:'В работе',val:inprog,bg:'#EBF3F9',ic:'#2D6A8F'},
+    {icon:'◆',label:'Выполнено',val:done,bg:'#E8F5EF',ic:'#3A7D5E'},
+    {icon:'⚡',label:`${activeSprint} · pts`,val:pts,bg:'#F0EBF8',ic:'#6B4FA0'},
+  ];
+  document.getElementById('statsbar').innerHTML=data.map(s=>`
+    <div class="stat-card">
+      <div class="stat-icon" style="background:${s.bg};color:${s.ic};">${s.icon}</div>
+      <div><div class="stat-val">${s.val}</div><div class="stat-lbl">${s.label}</div></div>
+    </div>`).join('');
+}
+
+// ============ VIEW TABS ============
+function buildTabs(){
+  document.getElementById('view-tabs').innerHTML=VIEWS.map(v=>
+    `<div class="view-tab${currentView===v.key?' active':''}" onclick="setView('${v.key}')">${v.label}</div>`
+  ).join('');
+  const titles={kanban:'Доска <span>проекта</span>',backlog:'Бэклог',sprints:'Спринты',list:'Список задач'};
+  document.getElementById('tb-title').innerHTML=titles[currentView];
+}
+
+// ============ VIEWS ============
+function setView(v){
+  currentView=v;
+  buildTabs();buildSidebar();render();
+}
+function applyFilters(){render();}
+
+function render(){
+  const area=document.getElementById('scroll-area');
+  if(currentView==='kanban') area.innerHTML=renderKanban();
+  else if(currentView==='backlog') area.innerHTML=renderBacklog();
+  else if(currentView==='sprints') area.innerHTML=renderSprints();
+  else if(currentView==='list') area.innerHTML=renderList();
+  buildStats();
+  attachDrag();
+}
+
+// KANBAN
+function renderKanban(){
+  const ft=filtered();
+  return `<div class="kanban">${STATUSES.map(s=>{
+    const cols=ft.filter(t=>t.status===s);
+    return `<div class="k-col" data-status="${s}" ondrop="drop(event,'${s}')" ondragover="dragover(event)">
+      <div class="k-col-head">
+        <div class="k-dot" style="background:${STATUS_COLORS[s]}"></div>
+        <div class="k-col-title">${s}</div>
+        <div class="k-count">${cols.length}</div>
+      </div>
+      ${cols.length?cols.map(t=>cardHTML(t)).join(''):`<div style="padding:20px 0;text-align:center;color:var(--ink4);font-size:12px;">Пусто</div>`}
+    </div>`;
+  }).join('')}</div>`;
+}
+function cardHTML(t){
+  return `<div class="task-card" draggable="true" data-id="${t.id}" onclick="openTask(${t.id})" ondragstart="dragstart(event,${t.id})">
+    <div class="card-tags">${typeBadge(t.type)}${prioBadge(t.priority)}</div>
+    <div class="card-title">${t.title}</div>
+    <div class="card-footer">
+      <div class="card-meta">${av(t.assignee,26)}${t.comments.length?`<span class="card-comment">💬 ${t.comments.length}</span>`:''}</div>
+      <span class="card-pts">${t.points}pt</span>
+    </div>
+  </div>`;
+}
+
+// BACKLOG
+function renderBacklog(){
+  const ft=filtered().filter(t=>t.sprint==='Бэклог'||t.status==='Бэклог');
+  if(!ft.length) return emptyState('Бэклог пуст','Все задачи в спринтах 🎉');
+  return `<div class="list-view">${ft.map(t=>`
+    <div class="list-item" onclick="openTask(${t.id})">
+      <span class="list-item-type" style="color:${STATUS_COLORS[t.status]}">${TYPE_ICONS[t.type]}</span>
+      <div class="list-item-title">${t.title}</div>
+      ${typeBadge(t.type)}${prioBadge(t.priority)}
+      ${av(t.assignee,26)}
+      <span class="card-pts">${t.points}pt</span>
+    </div>`).join('')}</div>`;
+}
+
+// SPRINTS
+function renderSprints(){
+  const sprintNames=SPRINTS_LIST.filter(s=>s!=='Бэклог');
+  return `<div class="sprint-wrap">${sprintNames.map(sp=>{
+    const items=filtered().filter(t=>t.sprint===sp);
+    const done=items.filter(t=>t.status==='Готово').length;
+    const pct=items.length?Math.round(done/items.length*100):0;
+    const pts=items.reduce((a,t)=>a+t.points,0);
+    const isActive=sp===activeSprint;
+    return `<div class="sprint-block">
+      <div class="sprint-head" onclick="toggleSprint('${sp}')">
+        <div style="flex:1">
+          <div class="sprint-name">${sp} ${isActive?'<span style="font-size:11px;color:var(--accent);font-family:var(--font-mono);font-style:normal">· Активный</span>':''}</div>
+          <div class="sprint-info">${items.length} задач · ${pts} pts</div>
+        </div>
+        <div class="sprint-progress">
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <div class="sprint-pct">${pct}% выполнено</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      ${isActive?`<div class="sprint-body">${items.length?items.map(t=>`
+        <div class="sprint-row" onclick="openTask(${t.id})">
+          <span style="color:${STATUS_COLORS[t.status]}">${TYPE_ICONS[t.type]}</span>
+          <div class="sprint-row-title">${t.title}</div>
+          ${statusBadge(t.status)}${prioBadge(t.priority)}
+          ${av(t.assignee,24)}
+          <span class="card-pts">${t.points}pt</span>
+        </div>`).join(''):`<div style="padding:20px;text-align:center;color:var(--ink4);font-size:13px;">Нет задач в этом спринте</div>`}
+      </div>`:''}
+    </div>`;
+  }).join('')}</div>`;
+}
+function toggleSprint(sp){activeSprint=sp;render();}
+
+// LIST
+function renderList(){
+  const ft=filtered();
+  if(!ft.length) return emptyState('Нет задач','Попробуйте изменить фильтры');
+  return `<div style="background:var(--white);border-radius:var(--r2);border:1.5px solid var(--cream3);overflow:hidden;">
+    <div style="display:grid;grid-template-columns:1fr 100px 90px 90px 32px;gap:12px;padding:10px 20px;border-bottom:1.5px solid var(--cream2);font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.06em;">
+      <div>Задача</div><div>Статус</div><div>Приоритет</div><div>Исполнитель</div><div>Pts</div>
+    </div>
+    ${ft.map((t,i)=>`
+    <div onclick="openTask(${t.id})" style="display:grid;grid-template-columns:1fr 100px 90px 90px 32px;gap:12px;padding:12px 20px;border-bottom:${i<ft.length-1?'1.5px solid var(--cream2)':'none'};cursor:pointer;transition:background .12s;align-items:center;"
+      onmouseover="this.style.background='var(--cream2)'" onmouseout="this.style.background=''">
+      <div style="display:flex;align-items:center;gap:10px;"><span style="color:var(--ink4);font-size:14px">${TYPE_ICONS[t.type]}</span><span style="font-size:13.5px;font-weight:600;color:var(--ink)">${t.title}</span></div>
+      <div>${statusBadge(t.status)}</div>
+      <div>${prioBadge(t.priority)}</div>
+      <div style="display:flex;align-items:center;gap:6px;">${av(t.assignee,22)}<span style="font-size:12px;color:var(--ink3)">${t.assignee}</span></div>
+      <div style="font-size:12px;font-family:var(--font-mono);color:var(--ink4)">${t.points}</div>
+    </div>`).join('')}
+  </div>`;
+}
+function emptyState(title,sub){
+  return `<div class="empty"><div class="empty-icon">◎</div><div class="empty-text">${title}</div><div style="font-size:13px;margin-top:6px;color:var(--ink4)">${sub}</div></div>`;
+}
+
+// ============ DRAG & DROP ============
+function attachDrag(){
+  document.querySelectorAll('.task-card[draggable]').forEach(el=>{
+    el.addEventListener('dragstart',e=>dragstart(e,parseInt(el.dataset.id)));
+    el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+  });
+}
+function dragstart(e,id){draggingId=id;setTimeout(()=>{document.querySelector(`[data-id="${id}"]`)?.classList.add('dragging')},0);}
+function dragover(e){e.preventDefault();e.currentTarget.classList.add('drag-over');}
+function drop(e,status){
+  e.preventDefault();e.currentTarget.classList.remove('drag-over');
+  if(draggingId==null)return;
+  tasks=tasks.map(t=>t.id===draggingId?{...t,status}:t);
+  draggingId=null;render();
+}
+document.addEventListener('dragend',()=>{
+  document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+});
+
+// ============ TASK MODAL ============
+function openTask(id){
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  const mo=document.getElementById('modal-overlay');
+  const mc=document.getElementById('modal-content');
+  mc.innerHTML=`
+    <div class="modal-header">${typeBadge(t.type)}${statusBadge(t.status)}${prioBadge(t.priority)}</div>
+    <div class="modal-title" id="edit-title" ondblclick="startEdit(${id},'title',this)">${t.title}</div>
+    <p class="modal-desc" id="edit-desc" ondblclick="startEdit(${id},'desc',this)">${t.description||'<em style="color:var(--ink4)">Нет описания. Двойной клик для редактирования.</em>'}</p>
+    <div class="modal-actions">
+      <button class="btn-sec" onclick="openEdit(${id})">✏️ Изменить</button>
+      <button class="btn-sec" onclick="changeStatus(${id})">↻ Статус</button>
+      <button class="btn-sec btn-danger" onclick="deleteTask(${id})">✕ Удалить</button>
+    </div>
+    <div class="modal-grid">
+      <div class="modal-field"><label>Исполнитель</label><div class="modal-field-val">${av(t.assignee,24)}<span>${t.assignee}</span></div></div>
+      <div class="modal-field"><label>Спринт</label><div class="modal-field-val">${t.sprint}</div></div>
+      <div class="modal-field"><label>Story Points</label><div class="modal-field-val"><span style="font-family:var(--font-mono);font-size:15px;font-weight:800;color:var(--accent)">${t.points}</span> pts</div></div>
+      <div class="modal-field"><label>Тип задачи</label><div class="modal-field-val">${TYPE_ICONS[t.type]} ${t.type}</div></div>
+    </div>
+    <div class="comment-section">
+      <div class="comment-title">💬 Комментарии <span style="background:var(--cream2);border-radius:99px;padding:2px 8px;font-size:11px;font-family:var(--font-mono)">${t.comments.length}</span></div>
+      <div id="comments-list">${t.comments.map(c=>`
+        <div class="comment-item">
+          ${av(c.author,30)}
+          <div class="comment-bubble">
+            <span class="comment-author">${c.author}</span><span class="comment-date">${c.date}</span>
+            <div class="comment-text">${c.text}</div>
+          </div>
+        </div>`).join('')||`<div style="font-size:13px;color:var(--ink4);padding:8px 0">Пока нет комментариев</div>`}
+      </div>
+      <div class="comment-input-wrap">
+        <input class="comment-input" id="new-comment" placeholder="Написать комментарий…" onkeydown="if(event.key==='Enter')addComment(${id})"/>
+        <button class="comment-send" onclick="addComment(${id})">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>`;
+  mo.style.display='flex';
+}
+function addComment(id){
+  const inp=document.getElementById('new-comment');
+  const text=inp.value.trim();if(!text)return;
+  const now=new Date();
+  const date=`${now.getDate()} мая`;
+  tasks=tasks.map(t=>t.id===id?{...t,comments:[...t.comments,{author:'Вы',text,date}]}:t);
+  inp.value='';
+  openTask(id);
+}
+function changeStatus(id){
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  const i=STATUSES.indexOf(t.status);
+  const next=STATUSES[(i+1)%STATUSES.length];
+  tasks=tasks.map(x=>x.id===id?{...x,status:next}:x);
+  openTask(id);render();
+}
+function deleteTask(id){
+  if(!confirm('Удалить задачу?'))return;
+  tasks=tasks.filter(t=>t.id!==id);
+  closeModal();render();
+}
+function openEdit(id){closeModal();openCreateEdit(id);}
+
+// ============ CREATE / EDIT ============
+function openCreate(){openCreateEdit(null);}
+function openCreateEdit(id){
+  const t=id?tasks.find(x=>x.id===id):null;
+  const mo=document.getElementById('modal-overlay');
+  const mc=document.getElementById('modal-content');
+  const sprintOpts=SPRINTS_LIST.map(s=>`<option${(t?.sprint||'Бэклог')===s?' selected':''}>${s}</option>`).join('');
+  mc.innerHTML=`
+    <div style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--ink);margin-bottom:20px">${t?'Редактировать задачу':'Новая задача'}</div>
+    <div class="create-form">
+      <div class="form-group"><label>Название *</label><input class="form-input" id="f-title" value="${t?.title||''}" placeholder="Краткое название задачи"/></div>
+      <div class="form-group"><label>Описание</label><textarea class="form-textarea" id="f-desc" placeholder="Подробное описание…">${t?.description||''}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Тип</label><select class="form-select" id="f-type">${TYPES.map(x=>`<option${(t?.type||'Задача')===x?' selected':''}>${x}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Статус</label><select class="form-select" id="f-status">${STATUSES.map(x=>`<option${(t?.status||'Бэклог')===x?' selected':''}>${x}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Приоритет</label><select class="form-select" id="f-priority">${PRIORITIES.map(x=>`<option${(t?.priority||'Средний')===x?' selected':''}>${x}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Исполнитель</label><select class="form-select" id="f-assignee">${MEMBERS.map(m=>`<option${(t?.assignee||MEMBERS[0])===m?' selected':''}>${m}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Спринт</label><select class="form-select" id="f-sprint">${sprintOpts}</select></div>
+        <div class="form-group"><label>Story Points</label><input class="form-input" type="number" id="f-points" value="${t?.points||3}" min="0" max="99"/></div>
+      </div>
+      <div class="form-footer">
+        <button class="btn-primary" onclick="saveTask(${id||'null'})">${t?'Сохранить':'Создать задачу'}</button>
+        <button class="btn-sec" onclick="closeModal()">Отмена</button>
+      </div>
+    </div>`;
+  mo.style.display='flex';
+}
+function saveTask(id){
+  const get=x=>document.getElementById(x)?.value||'';
+  const title=get('f-title').trim();if(!title)return alert('Введите название');
+  const data={title,description:get('f-desc'),type:get('f-type'),status:get('f-status'),priority:get('f-priority'),assignee:get('f-assignee'),sprint:get('f-sprint'),points:parseInt(get('f-points'))||0};
+  if(id){tasks=tasks.map(t=>t.id===id?{...t,...data}:t);}
+  else{tasks=[...tasks,{id:nextId++,comments:[],...data}];}
+  closeModal();render();
+}
+
+// ============ MODAL ============
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('modal-overlay'))return;
+  document.getElementById('modal-overlay').style.display='none';
+}
+// swipe to close
+let touchStartY=0;
+document.getElementById('modal-sheet').addEventListener('touchstart',e=>touchStartY=e.touches[0].clientY);
+document.getElementById('modal-sheet').addEventListener('touchend',e=>{
+  if(e.changedTouches[0].clientY-touchStartY>80)document.getElementById('modal-overlay').style.display='none';
+});
+
+// ============ PWA ============
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  const banner=document.getElementById('install-banner');
+  banner.style.display='flex';
+  document.getElementById('install-btn').onclick=async()=>{
+    banner.style.display='none';
+    await deferredPrompt.prompt();
+    deferredPrompt=null;
+  };
+});
+
+// ============ INIT ============
+buildSidebar();buildTabs();render();
+</script>
+</body>
+</html>
