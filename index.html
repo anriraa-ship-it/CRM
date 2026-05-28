@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="DesignFlow"/>
+<meta name="theme-color" content="#1A1714"/>
+<title>DesignFlow CRM</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#1A1714;--ink2:#3D3831;--ink3:#7A7168;--ink4:#B5AFA8;
+  --cream:#F5F0EB;--cream2:#EDE7DF;--cream3:#E4DCD2;
+  --accent:#C4622D;--accent2:#E8894A;--accent3:#F5C49A;
+  --green:#3A7D5E;--blue:#2D6A8F;--violet:#6B4FA0;--rose:#B84C6E;
+  --white:#FDFAF7;--shadow:rgba(26,23,20,0.12);
+  --r:14px;--r2:20px;
+  --font-display:'Playfair Display',serif;
+  --font-ui:'Syne',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--cream);font-family:var(--font-ui)}
+#app{display:flex;height:100%;height:100dvh}
+
+/* SETUP SCREEN */
+#setup-screen{
+  position:fixed;inset:0;background:var(--cream);z-index:9999;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.setup-card{
+  background:var(--white);border-radius:28px;padding:40px;width:100%;max-width:480px;
+  border:1.5px solid var(--cream3);box-shadow:0 20px 60px var(--shadow);
+}
+.setup-logo{
+  width:60px;height:60px;border-radius:18px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-size:26px;color:#fff;font-weight:700;
+  margin-bottom:24px;box-shadow:0 4px 16px rgba(196,98,45,.35);
+}
+.setup-title{font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.setup-sub{font-size:14px;color:var(--ink3);margin-bottom:32px;line-height:1.6}
+.setup-step{margin-bottom:24px}
+.setup-step label{font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:8px}
+.setup-input{
+  width:100%;background:var(--cream2);border:1.5px solid var(--cream3);border-radius:12px;
+  padding:12px 16px;font-size:14px;font-family:var(--font-ui);color:var(--ink);outline:none;
+  transition:border-color .2s;
+}
+.setup-input:focus{border-color:var(--accent);background:var(--white)}
+.setup-hint{font-size:12px;color:var(--ink4);margin-top:6px;line-height:1.5}
+.setup-hint code{font-family:var(--font-mono);background:var(--cream2);padding:1px 6px;border-radius:4px;font-size:11px}
+.setup-btn{
+  width:100%;padding:14px;background:var(--ink);color:#fff;border:none;border-radius:14px;
+  font-size:15px;font-weight:700;font-family:var(--font-ui);cursor:pointer;
+  transition:transform .1s,box-shadow .15s;box-shadow:0 4px 16px rgba(26,23,20,.2);margin-top:8px;
+}
+.setup-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(26,23,20,.25)}
+.setup-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.setup-error{background:#FEE2E2;color:#DC2626;border-radius:10px;padding:10px 14px;font-size:13px;margin-top:12px;display:none}
+.setup-tabs{display:flex;gap:4px;background:var(--cream2);border-radius:12px;padding:4px;margin-bottom:28px}
+.setup-tab{flex:1;padding:8px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-ui);background:none;color:var(--ink3);transition:all .15s}
+.setup-tab.active{background:var(--white);color:var(--ink);box-shadow:0 1px 4px var(--shadow)}
+
+/* SIDEBAR */
+#sidebar{
+  width:72px;background:var(--ink);display:flex;flex-direction:column;
+  align-items:center;padding:env(safe-area-inset-top,16px) 0 env(safe-area-inset-bottom,16px);
+  gap:4px;position:relative;z-index:100;flex-shrink:0;
+  transition:width .3s cubic-bezier(.4,0,.2,1);
+}
+#sidebar.expanded{width:240px}
+.sb-logo-wrap{display:flex;align-items:center;gap:10px;padding:0 14px;width:100%;margin-bottom:16px}
+.sb-logo{
+  width:44px;height:44px;border-radius:14px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-size:20px;color:#fff;font-weight:700;cursor:pointer;
+  box-shadow:0 4px 16px rgba(196,98,45,.4);
+}
+.sb-logo-text{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;opacity:0;transition:opacity .2s}
+#sidebar.expanded .sb-logo-text{opacity:1}
+.sb-nav{flex:1;display:flex;flex-direction:column;gap:2px;width:100%;padding:0 10px}
+.sb-item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;cursor:pointer;transition:background .15s;color:var(--ink4);white-space:nowrap;overflow:hidden;position:relative}
+.sb-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.sb-item.active{background:rgba(196,98,45,.2);color:var(--accent2)}
+.sb-item svg{flex-shrink:0;width:20px;height:20px}
+.sb-item-label{font-size:13.5px;font-weight:600;opacity:0;transition:opacity .2s}
+#sidebar.expanded .sb-item-label{opacity:1}
+.sb-divider{width:32px;height:1px;background:rgba(255,255,255,.1);margin:8px auto}
+#sidebar.expanded .sb-divider{width:calc(100% - 20px)}
+.sb-section{font-size:9px;font-weight:700;color:var(--ink4);letter-spacing:.1em;text-transform:uppercase;padding:0 12px;opacity:0;transition:opacity .2s;height:0;overflow:hidden}
+#sidebar.expanded .sb-section{opacity:1;height:auto;margin:8px 0 4px}
+.sb-team{padding:0 10px;display:flex;flex-direction:column;gap:2px;max-height:200px;overflow-y:auto}
+.sb-member{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .15s;overflow:hidden}
+.sb-member:hover{background:rgba(255,255,255,.06)}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--font-ui)}
+.sb-member-name{font-size:12px;color:rgba(255,255,255,.7);white-space:nowrap;opacity:0;transition:opacity .2s;font-weight:500}
+.sb-member-cnt{font-size:10px;color:var(--ink4);margin-left:auto;font-family:var(--font-mono);opacity:0;transition:opacity .2s}
+#sidebar.expanded .sb-member-name{opacity:1}
+#sidebar.expanded .sb-member-cnt{opacity:1}
+.sb-toggle{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;color:var(--ink4);margin-bottom:4px;flex-shrink:0}
+.sb-toggle:hover{background:rgba(255,255,255,.18);color:#fff}
+.sb-bottom{padding:0 10px;margin-top:4px}
+.sb-user-chip{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.06);overflow:hidden;cursor:default}
+.sb-user-name{font-size:11px;color:rgba(255,255,255,.6);white-space:nowrap;opacity:0;transition:opacity .2s}
+#sidebar.expanded .sb-user-name{opacity:1}
+
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{background:var(--white);border-bottom:1.5px solid var(--cream3);padding:0 24px;height:62px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:env(safe-area-inset-top,0)}
+.tb-title{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink);margin-right:auto}
+.tb-title span{color:var(--accent)}
+.search-wrap{position:relative;flex:1;max-width:320px}
+.search-wrap input{width:100%;background:var(--cream2);border:1.5px solid transparent;border-radius:12px;padding:9px 14px 9px 38px;font-size:13px;font-family:var(--font-ui);color:var(--ink);outline:none;transition:border-color .2s,background .2s}
+.search-wrap input:focus{background:var(--white);border-color:var(--accent3)}
+.search-wrap input::placeholder{color:var(--ink4)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink4);pointer-events:none}
+.filter-chip{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;background:var(--cream2);border:1.5px solid var(--cream3);cursor:pointer;font-size:12px;font-weight:600;color:var(--ink2);transition:all .15s;white-space:nowrap}
+.filter-chip select{background:none;border:none;outline:none;cursor:pointer;font-size:12px;font-weight:600;color:inherit;font-family:var(--font-ui)}
+.btn-primary{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:12px;background:var(--ink);color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--font-ui);transition:transform .1s,box-shadow .15s;box-shadow:0 2px 8px rgba(26,23,20,.2);white-space:nowrap}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(26,23,20,.25)}
+
+#statsbar{display:flex;gap:12px;padding:16px 24px;background:var(--white);border-bottom:1.5px solid var(--cream3);flex-shrink:0;overflow-x:auto}
+.stat-card{background:var(--cream2);border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-shrink:0;min-width:160px;border:1.5px solid var(--cream3);transition:transform .15s}
+.stat-card:hover{transform:translateY(-1px)}
+.stat-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.stat-val{font-size:26px;font-weight:800;color:var(--ink);font-family:var(--font-display);line-height:1}
+.stat-lbl{font-size:11px;color:var(--ink3);font-weight:600;margin-top:2px}
+
+#content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.view-tabs{display:flex;gap:2px;padding:14px 24px 0;background:var(--white)}
+.view-tab{padding:8px 18px;border-radius:10px 10px 0 0;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink3);background:var(--cream2);border:1.5px solid var(--cream3);border-bottom:none;transition:all .15s;font-family:var(--font-ui)}
+.view-tab.active{background:var(--cream);color:var(--ink);border-color:var(--cream3);border-bottom:1.5px solid var(--cream)}
+.scroll-area{flex:1;overflow:auto;padding:20px 24px;-webkit-overflow-scrolling:touch}
+
+/* KANBAN */
+.kanban{display:flex;gap:16px;align-items:flex-start;min-width:fit-content;min-height:100%}
+.k-col{width:280px;background:var(--cream2);border-radius:var(--r2);padding:16px 14px;border:1.5px solid var(--cream3);flex-shrink:0;transition:background .15s;min-height:400px}
+.k-col.drag-over{background:var(--cream3);border-color:var(--accent3)}
+.k-col-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.k-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.k-col-title{font-size:12px;font-weight:800;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em;flex:1}
+.k-count{background:var(--cream3);border-radius:99px;padding:2px 8px;font-size:11px;font-weight:700;color:var(--ink3);font-family:var(--font-mono)}
+.task-card{background:var(--white);border-radius:var(--r);padding:14px;margin-bottom:8px;cursor:pointer;border:1.5px solid var(--cream3);transition:transform .15s,box-shadow .15s;box-shadow:0 1px 4px var(--shadow);position:relative;overflow:hidden}
+.task-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);opacity:0;transition:opacity .15s}
+.task-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(26,23,20,.12)}
+.task-card:hover::before{opacity:1}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tag{border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;letter-spacing:.02em;font-family:var(--font-mono)}
+.card-title{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.45;margin-bottom:10px}
+.card-footer{display:flex;align-items:center;justify-content:space-between}
+.card-pts{font-size:11px;font-family:var(--font-mono);background:var(--cream2);border-radius:6px;padding:3px 7px;color:var(--ink3)}
+.card-comment{font-size:11px;color:var(--ink4)}
+
+/* LIST */
+.list-view{display:flex;flex-direction:column;gap:8px}
+.list-item{background:var(--white);border-radius:14px;padding:14px 20px;display:flex;align-items:center;gap:16px;border:1.5px solid var(--cream3);cursor:pointer;transition:all .15s}
+.list-item:hover{border-color:var(--accent3);box-shadow:0 2px 12px var(--shadow)}
+
+/* SPRINT */
+.sprint-wrap{display:flex;flex-direction:column;gap:20px}
+.sprint-block{background:var(--white);border-radius:var(--r2);border:1.5px solid var(--cream3);overflow:hidden}
+.sprint-head{padding:18px 22px;display:flex;align-items:center;gap:14px;border-bottom:1.5px solid var(--cream2);cursor:pointer;transition:background .15s}
+.sprint-head:hover{background:var(--cream2)}
+.sprint-name{font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--ink)}
+.sprint-info{font-size:12px;color:var(--ink3);font-family:var(--font-mono)}
+.sprint-progress{flex:1;max-width:200px}
+.progress-bar{height:6px;background:var(--cream3);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s}
+.sprint-pct{font-size:11px;font-weight:700;color:var(--accent);font-family:var(--font-mono);margin-top:4px}
+.sprint-body{padding:12px}
+.sprint-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:background .12s}
+.sprint-row:hover{background:var(--cream2)}
+.sprint-row-title{flex:1;font-size:13.5px;font-weight:600;color:var(--ink)}
+
+/* TEAM VIEW */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.team-card{background:var(--white);border-radius:var(--r2);padding:24px;border:1.5px solid var(--cream3);transition:transform .15s,box-shadow .15s;position:relative}
+.team-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px var(--shadow)}
+.team-av{width:56px;height:56px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;margin-bottom:14px}
+.team-name{font-size:16px;font-weight:800;color:var(--ink);margin-bottom:4px}
+.team-role{font-size:12px;color:var(--ink3);margin-bottom:14px}
+.team-stats{display:flex;gap:12px}
+.team-stat{text-align:center}
+.team-stat-val{font-size:18px;font-weight:800;color:var(--accent);font-family:var(--font-display)}
+.team-stat-lbl{font-size:10px;color:var(--ink4);font-weight:600}
+.team-card-actions{position:absolute;top:16px;right:16px;display:flex;gap:6px;opacity:0;transition:opacity .15s}
+.team-card:hover .team-card-actions{opacity:1}
+.tc-btn{width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:background .15s}
+.tc-btn-edit{background:var(--cream2);color:var(--ink3)}
+.tc-btn-edit:hover{background:var(--cream3)}
+.tc-btn-del{background:#FEE2E2;color:#DC2626}
+.tc-btn-del:hover{background:#FECACA}
+.add-member-card{background:var(--cream2);border-radius:var(--r2);padding:24px;border:2px dashed var(--cream3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:all .15s;min-height:160px}
+.add-member-card:hover{border-color:var(--accent3);background:var(--cream)}
+.add-member-icon{width:48px;height:48px;border-radius:14px;background:var(--cream3);display:flex;align-items:center;justify-content:center;font-size:22px;transition:background .15s}
+.add-member-card:hover .add-member-icon{background:var(--accent3)}
+.add-member-text{font-size:13px;font-weight:700;color:var(--ink3)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,23,20,.55);z-index:500;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-sheet{background:var(--white);border-radius:28px 28px 0 0;width:100%;max-width:760px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;animation:slideUp .3s cubic-bezier(.4,0,.2,1);padding-bottom:env(safe-area-inset-bottom,0)}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:40px;height:4px;background:var(--cream3);border-radius:99px;margin:12px auto 0}
+.modal-scroll{overflow-y:auto;flex:1;padding:20px 28px 28px;-webkit-overflow-scrolling:touch}
+.modal-header{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.modal-title{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px;line-height:1.3}
+.modal-desc{font-size:14px;color:var(--ink3);line-height:1.65}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--cream2);border-radius:16px;padding:16px;margin:20px 0;border:1.5px solid var(--cream3)}
+.modal-field label{font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:6px}
+.modal-field-val{font-size:13.5px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px}
+.modal-actions{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.btn-sec{padding:8px 16px;border-radius:10px;background:var(--cream2);border:1.5px solid var(--cream3);cursor:pointer;font-size:12.5px;font-weight:700;color:var(--ink2);font-family:var(--font-ui);transition:all .15s}
+.btn-sec:hover{background:var(--cream3)}
+.btn-danger{background:#FEE2E2;color:#DC2626;border-color:#FECACA}
+.btn-danger:hover{background:#FECACA}
+.comment-section{margin-top:20px;border-top:1.5px solid var(--cream3);padding-top:20px}
+.comment-title{font-size:13px;font-weight:800;color:var(--ink2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.comment-item{display:flex;gap:10px;margin-bottom:14px}
+.comment-bubble{background:var(--cream2);border-radius:0 12px 12px 12px;padding:10px 14px;flex:1;border:1.5px solid var(--cream3)}
+.comment-author{font-size:11px;font-weight:700;color:var(--ink2)}
+.comment-date{font-size:10px;color:var(--ink4);font-family:var(--font-mono);margin-left:6px}
+.comment-text{font-size:13px;color:var(--ink3);margin-top:4px;line-height:1.55}
+.comment-input-wrap{display:flex;gap:8px;margin-top:12px}
+.comment-input{flex:1;background:var(--cream2);border:1.5px solid var(--cream3);border-radius:12px;padding:10px 14px;font-size:13px;font-family:var(--font-ui);color:var(--ink);outline:none;transition:border-color .2s}
+.comment-input:focus{border-color:var(--accent);background:var(--white)}
+.comment-send{width:42px;height:42px;background:var(--ink);border:none;border-radius:12px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.comment-send:hover{background:var(--accent)}
+.create-form{display:flex;flex-direction:column;gap:14px}
+.form-group label{font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--cream2);border:1.5px solid var(--cream3);border-radius:12px;padding:10px 14px;font-size:13.5px;font-family:var(--font-ui);color:var(--ink);outline:none;transition:border-color .2s,background .2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);background:var(--white)}
+.form-textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-footer{display:flex;gap:10px;padding-top:4px}
+.empty{text-align:center;padding:48px 20px;color:var(--ink4)}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:.5}
+.empty-text{font-size:15px;font-weight:600}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:14px;font-size:13px;font-weight:600;z-index:9999;animation:toastIn .3s;pointer-events:none;white-space:nowrap}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:var(--cream);z-index:8000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.spinner{width:40px;height:40px;border:3px solid var(--cream3);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* LIVE INDICATOR */
+.live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  #sidebar{width:60px}
+  #sidebar.expanded{width:220px;position:absolute;height:100%;z-index:200}
+  .scroll-area{padding:16px}
+  #statsbar{padding:12px 16px}
+  #topbar{padding:0 16px;padding-top:env(safe-area-inset-top,0)}
+  .k-col{width:255px}
+  .form-row{grid-template-columns:1fr}
+  .modal-scroll{padding:16px 20px 24px}
+  .modal-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  #statsbar{display:none}
+  .search-wrap{max-width:160px}
+  .tb-title{font-size:17px}
+  .k-col{width:240px}
+  .filter-chip .fc-label{display:none}
+  .team-grid{grid-template-columns:1fr 1fr}
+}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--cream3);border-radius:99px}
+
+#install-banner{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:14px 20px;border-radius:16px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;z-index:999;box-shadow:0 8px 32px rgba(26,23,20,.3);animation:slideUp .3s}
+#install-banner button{background:var(--accent);border:none;color:#fff;padding:7px 14px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font-ui)}
+.dismiss-btn{background:none!important;border:none;color:var(--ink4)!important;cursor:pointer;font-size:18px;line-height:1;padding:0!important}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-logo">Д</div>
+    <div class="setup-title">DesignFlow CRM</div>
+    <div class="setup-sub">Введи данные Supabase для подключения к единой базе данных команды</div>
+
+    <div class="setup-tabs">
+      <button class="setup-tab active" onclick="switchSetupTab('connect')">Подключиться</button>
+      <button class="setup-tab" onclick="switchSetupTab('register')">Войти как участник</button>
+    </div>
+
+    <div id="tab-connect">
+      <div class="setup-step">
+        <label>Project URL</label>
+        <input class="setup-input" id="sb-url" placeholder="https://xxxxxxxxxxxx.supabase.co" autocomplete="off"/>
+        <div class="setup-hint">Settings → API → Project URL</div>
+      </div>
+      <div class="setup-step">
+        <label>Anon Public Key</label>
+        <input class="setup-input" id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off"/>
+        <div class="setup-hint">Settings → API → <code>anon public</code></div>
+      </div>
+      <div class="setup-step">
+        <label>Твоё имя в команде</label>
+        <input class="setup-input" id="sb-name" placeholder="Например: Артём" autocomplete="name"/>
+      </div>
+      <div class="setup-step">
+        <label>Твоя роль</label>
+        <input class="setup-input" id="sb-role" placeholder="Например: UI/UX Дизайнер" autocomplete="off"/>
+      </div>
+      <div id="setup-error" class="setup-error"></div>
+      <button class="setup-btn" id="connect-btn" onclick="connectSupabase()">Подключиться →</button>
+      <div style="font-size:12px;color:var(--ink4);margin-top:14px;line-height:1.6;text-align:center">
+        Ключи хранятся только в твоём браузере и не передаются третьим лицам
+      </div>
+    </div>
+
+    <div id="tab-register" style="display:none">
+      <div class="setup-step">
+        <label>Твоё имя</label>
+        <input class="setup-input" id="reg-name" placeholder="Введи своё имя"/>
+      </div>
+      <div class="setup-step">
+        <label>Роль в команде</label>
+        <input class="setup-input" id="reg-role" placeholder="Например: Арт-директор"/>
+      </div>
+      <div id="reg-error" class="setup-error"></div>
+      <button class="setup-btn" onclick="registerMember()">Войти →</button>
+      <div style="font-size:12px;color:var(--ink4);margin-top:14px;text-align:center">
+        Настройки Supabase уже сохранены на этом устройстве
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading" style="display:none">
+  <div class="spinner"></div>
+  <div style="font-size:14px;color:var(--ink3);font-weight:600">Подключение к базе данных…</div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+  <div id="sidebar">
+    <div class="sb-logo-wrap">
+      <div class="sb-logo" onclick="toggleSidebar()">Д</div>
+      <span class="sb-logo-text">DesignFlow</span>
+    </div>
+    <div class="sb-nav" id="sb-nav"></div>
+    <div class="sb-divider"></div>
+    <div class="sb-section">Команда</div>
+    <div class="sb-team" id="sb-team"></div>
+    <div class="sb-divider"></div>
+    <div class="sb-bottom">
+      <div class="sb-user-chip" id="sb-user-chip">
+        <div class="av" id="sb-self-av" style="width:26px;height:26px;font-size:10px;background:var(--accent)"></div>
+        <span class="sb-user-name" id="sb-self-name"></span>
+        <div class="live-dot" style="margin-left:auto"></div>
+      </div>
+    </div>
+    <div style="height:8px"></div>
+    <div class="sb-toggle" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="topbar">
+      <div class="tb-title" id="tb-title">Доска <span>проекта</span></div>
+      <div class="search-wrap">
+        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="search-input" placeholder="Поиск задач…" oninput="applyFilters()"/>
+      </div>
+      <div class="filter-chip">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"/></svg>
+        <span class="fc-label">Приоритет</span>
+        <select id="filter-priority" onchange="applyFilters()">
+          <option value="">Все</option>
+          <option>Низкий</option><option>Средний</option><option>Высокий</option><option>Критический</option>
+        </select>
+      </div>
+      <div class="filter-chip">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="fc-label">Исполнитель</span>
+        <select id="filter-assignee" onchange="applyFilters()">
+          <option value="">Все</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="openCreate()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Задача
+      </button>
+    </div>
+
+    <div id="statsbar"></div>
+
+    <div id="content">
+      <div class="view-tabs" id="view-tabs"></div>
+      <div class="scroll-area" id="scroll-area">
+        <div class="empty"><div class="spinner" style="margin:0 auto"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal-sheet" id="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-scroll" id="modal-content"></div>
+  </div>
+</div>
+
+<div id="install-banner" style="display:none">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  Установить DesignFlow
+  <button id="install-btn">Установить</button>
+  <button class="dismiss-btn" onclick="document.getElementById('install-banner').style.display='none'">✕</button>
+</div>
+
+<script>
+// ============ CONSTANTS ============
+const PRIORITIES=['Низкий','Средний','Высокий','Критический'];
+const PRIO_COLORS={Низкий:'#3A7D5E',Средний:'#C4622D',Высокий:'#B84C6E',Критический:'#6B4FA0'};
+const PRIO_BG={Низкий:'#E8F5EF',Средний:'#FBF0EB',Высокий:'#FDEEF3',Критический:'#F0EBF8'};
+const STATUSES=['Бэклог','К выполнению','В работе','Ревью','Готово'];
+const STATUS_COLORS={'Бэклог':'#B5AFA8','К выполнению':'#2D6A8F','В работе':'#C4622D','Ревью':'#6B4FA0','Готово':'#3A7D5E'};
+const STATUS_BG={'Бэклог':'#F2EFEC','К выполнению':'#EBF3F9','В работе':'#FBF0EB','Ревью':'#F0EBF8','Готово':'#E8F5EF'};
+const TYPES=['Задача','Баг','Фича','Исследование','Правки','Брифинг'];
+const TYPE_ICONS={Задача:'✦',Баг:'◆',Фича:'◉',Исследование:'◎',Правки:'◈',Брифинг:'◐'};
+const SPRINTS_LIST=['Спринт 1','Спринт 2','Спринт 3','Бэклог'];
+const AV_COLORS=['#C4622D','#6B4FA0','#2D6A8F','#B84C6E','#3A7D5E','#8B6914','#1A7A6E','#A03060','#4A6FA0','#7A4F20'];
+const VIEWS=[{key:'kanban',label:'Доска'},{key:'backlog',label:'Бэклог'},{key:'sprints',label:'Спринты'},{key:'list',label:'Список'},{key:'team',label:'Команда'}];
+const NAV=[
+  {key:'kanban',label:'Доска',icon:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'},
+  {key:'backlog',label:'Бэклог',icon:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>'},
+  {key:'sprints',label:'Спринты',icon:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'},
+  {key:'list',label:'Список',icon:'<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>'},
+  {key:'team',label:'Команда',icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'},
+];
+
+// ============ STATE ============
+let db=null;
+let tasks=[];
+let members=[];
+let currentView='kanban';
+let activeSprint='Спринт 1';
+let draggingId=null;
+let sidebarExpanded=false;
+let currentUser=null;
+let realtimeChannel=null;
+
+// ============ SETUP ============
+function switchSetupTab(tab){
+  document.querySelectorAll('.setup-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='connect'?0:1)));
+  document.getElementById('tab-connect').style.display=tab==='connect'?'':'none';
+  document.getElementById('tab-register').style.display=tab==='register'?'':'none';
+  if(tab==='register'&&!localStorage.getItem('df_url')){
+    document.getElementById('reg-error').style.display='block';
+    document.getElementById('reg-error').textContent='Сначала подключитесь с ключами Supabase';
+  }
+}
+
+async function connectSupabase(){
+  const url=document.getElementById('sb-url').value.trim();
+  const key=document.getElementById('sb-key').value.trim();
+  const name=document.getElementById('sb-name').value.trim();
+  const role=document.getElementById('sb-role').value.trim()||'Участник команды';
+  const err=document.getElementById('setup-error');
+  err.style.display='none';
+  if(!url||!key){err.style.display='block';err.textContent='Введи URL и ключ';return;}
+  if(!name){err.style.display='block';err.textContent='Введи своё имя';return;}
+  document.getElementById('connect-btn').disabled=true;
+  document.getElementById('connect-btn').textContent='Подключение…';
+  try{
+    const sb=window.supabase.createClient(url,key);
+    // Test connection + create tables
+    await initDB(sb);
+    localStorage.setItem('df_url',url);
+    localStorage.setItem('df_key',key);
+    localStorage.setItem('df_name',name);
+    localStorage.setItem('df_role',role);
+    db=sb;
+    await joinAsUser(name,role);
+    await launchApp();
+  }catch(e){
+    err.style.display='block';
+    err.textContent='Ошибка подключения: '+e.message;
+    document.getElementById('connect-btn').disabled=false;
+    document.getElementById('connect-btn').textContent='Подключиться →';
+  }
+}
+
+async function registerMember(){
+  const name=document.getElementById('reg-name').value.trim();
+  const role=document.getElementById('reg-role').value.trim()||'Участник команды';
+  const err=document.getElementById('reg-error');
+  err.style.display='none';
+  if(!name){err.style.display='block';err.textContent='Введи имя';return;}
+  const url=localStorage.getItem('df_url');
+  const key=localStorage.getItem('df_key');
+  if(!url||!key){err.style.display='block';err.textContent='Сначала подключитесь с ключами Supabase';return;}
+  try{
+    db=window.supabase.createClient(url,key);
+    localStorage.setItem('df_name',name);
+    localStorage.setItem('df_role',role);
+    await joinAsUser(name,role);
+    await launchApp();
+  }catch(e){
+    err.style.display='block';err.textContent='Ошибка: '+e.message;
+  }
+}
+
+async function initDB(sb){
+  // Create tables via RPC if not exist — use insert test to verify
+  // We'll just try to query and handle gracefully
+  await sb.from('tasks').select('id').limit(1);
+  await sb.from('members').select('id').limit(1);
+  await sb.from('comments').select('id').limit(1);
+}
+
+async function joinAsUser(name,role){
+  // Upsert member
+  const colorIdx=Math.floor(Math.random()*AV_COLORS.length);
+  const {data,error}=await db.from('members').upsert({name,role,color:AV_COLORS[colorIdx],last_seen:new Date().toISOString()},{onConflict:'name'}).select().single();
+  if(error&&error.code!=='23505'){
+    // Try insert
+    const r=await db.from('members').select('*').eq('name',name).single();
+    currentUser=r.data||{name,role,color:AV_COLORS[colorIdx]};
+  }else{
+    currentUser=data||{name,role,color:AV_COLORS[colorIdx]};
+  }
+}
+
+async function checkSavedCredentials(){
+  const url=localStorage.getItem('df_url');
+  const key=localStorage.getItem('df_key');
+  const name=localStorage.getItem('df_name');
+  const role=localStorage.getItem('df_role');
+  if(url&&key&&name){
+    // Auto-connect
+    document.getElementById('setup-screen').style.display='none';
+    document.getElementById('loading').style.display='flex';
+    try{
+      db=window.supabase.createClient(url,key);
+      await initDB(db);
+      await joinAsUser(name,role||'Участник');
+      await launchApp();
+    }catch(e){
+      document.getElementById('loading').style.display='none';
+      document.getElementById('setup-screen').style.display='flex';
+    }
+  } else if(url&&key){
+    // Has credentials but no name — show register tab
+    switchSetupTab('register');
+  }
+}
+
+async function launchApp(){
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('loading').style.display='none';
+  document.getElementById('app').style.display='flex';
+  // Update last seen
+  await db.from('members').update({last_seen:new Date().toISOString()}).eq('name',currentUser.name);
+  await loadData();
+  setupRealtime();
+  buildSidebar();
+  buildTabs();
+  render();
+  setupCurrentUser();
+}
+
+// ============ DATA LOADING ============
+async function loadData(){
+  const [t,m]=await Promise.all([
+    db.from('tasks').select('*').order('created_at',{ascending:false}),
+    db.from('members').select('*').order('name')
+  ]);
+  tasks=t.data||[];
+  members=m.data||[];
+  updateAssigneeFilter();
+}
+
+async function loadComments(taskId){
+  const {data}=await db.from('comments').select('*').eq('task_id',taskId).order('created_at');
+  return data||[];
+}
+
+function updateAssigneeFilter(){
+  const sel=document.getElementById('filter-assignee');
+  if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Все</option>'+members.map(m=>`<option${cur===m.name?' selected':''}>${m.name}</option>`).join('');
+}
+
+// ============ REALTIME ============
+function setupRealtime(){
+  if(realtimeChannel)db.removeChannel(realtimeChannel);
+  realtimeChannel=db.channel('designflow-realtime')
+    .on('postgres_changes',{event:'*',schema:'public',table:'tasks'},async()=>{
+      const {data}=await db.from('tasks').select('*').order('created_at',{ascending:false});
+      tasks=data||[];
+      render();buildStats();buildSidebar();
+      showToast('Задачи обновлены ✦');
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'members'},async()=>{
+      const {data}=await db.from('members').select('*').order('name');
+      members=data||[];
+      buildSidebar();updateAssigneeFilter();
+      if(currentView==='team')render();
+    })
+    .subscribe();
+}
+
+// ============ UTILS ============
+function avEl(name,size=28){
+  const m=members.find(x=>x.name===name);
+  const color=m?.color||AV_COLORS[0];
+  return `<div class="av" style="width:${size}px;height:${size}px;background:${color};font-size:${Math.round(size*.38)}px;">${(name||'?')[0]}</div>`;
+}
+function tag(label,color,bg){return `<span class="tag" style="background:${bg};color:${color};">${label}</span>`;}
+function prioBadge(p){return tag(p,PRIO_COLORS[p],PRIO_BG[p]);}
+function statusBadge(s){return tag(s,STATUS_COLORS[s],STATUS_BG[s]);}
+function typeBadge(t){return tag(TYPE_ICONS[t]+' '+t,'#7A7168','#EDE7DF');}
+function filtered(){
+  const q=(document.getElementById('search-input')||{}).value?.toLowerCase()||'';
+  const fp=document.getElementById('filter-priority')?.value||'';
+  const fa=document.getElementById('filter-assignee')?.value||'';
+  return tasks.filter(t=>{
+    const mq=!q||t.title?.toLowerCase().includes(q)||t.description?.toLowerCase().includes(q);
+    const mp=!fp||t.priority===fp;
+    const ma=!fa||t.assignee===fa;
+    return mq&&mp&&ma;
+  });
+}
+function showToast(msg){
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
+}
+function setupCurrentUser(){
+  if(!currentUser)return;
+  document.getElementById('sb-self-av').textContent=currentUser.name[0];
+  document.getElementById('sb-self-av').style.background=currentUser.color||'var(--accent)';
+  document.getElementById('sb-self-name').textContent=currentUser.name;
+}
+
+// ============ SIDEBAR ============
+function buildSidebar(){
+  const nav=document.getElementById('sb-nav');
+  nav.innerHTML=NAV.map(n=>{
+    const active=currentView===n.key;
+    return `<div class="sb-item${active?' active':''}" onclick="setView('${n.key}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${n.icon}</svg>
+      <span class="sb-item-label">${n.label}</span>
+    </div>`;
+  }).join('');
+  const team=document.getElementById('sb-team');
+  team.innerHTML=members.map(m=>{
+    const cnt=tasks.filter(t=>t.assignee===m.name&&t.status!=='Готово').length;
+    return `<div class="sb-member">
+      <div class="av" style="width:26px;height:26px;background:${m.color||AV_COLORS[0]};font-size:10px;">${m.name[0]}</div>
+      <span class="sb-member-name">${m.name}</span>
+      <span class="sb-member-cnt">${cnt}</span>
+    </div>`;
+  }).join('');
+}
+function toggleSidebar(){
+  sidebarExpanded=!sidebarExpanded;
+  document.getElementById('sidebar').classList.toggle('expanded',sidebarExpanded);
+}
+
+// ============ STATS ============
+function buildStats(){
+  const done=tasks.filter(x=>x.status==='Готово').length;
+  const inprog=tasks.filter(x=>x.status==='В работе').length;
+  const pts=tasks.filter(x=>x.sprint===activeSprint).reduce((a,x)=>a+(x.points||0),0);
+  const data=[
+    {icon:'◉',label:'Всего задач',val:tasks.length,bg:'#FBF0EB',ic:'#C4622D'},
+    {icon:'✦',label:'В работе',val:inprog,bg:'#EBF3F9',ic:'#2D6A8F'},
+    {icon:'◎',label:'Выполнено',val:done,bg:'#E8F5EF',ic:'#3A7D5E'},
+    {icon:'⚡',label:`${activeSprint} · pts`,val:pts,bg:'#F0EBF8',ic:'#6B4FA0'},
+  ];
+  const sb=document.getElementById('statsbar');
+  if(sb)sb.innerHTML=data.map(s=>`
+    <div class="stat-card">
+      <div class="stat-icon" style="background:${s.bg};color:${s.ic};">${s.icon}</div>
+      <div><div class="stat-val">${s.val}</div><div class="stat-lbl">${s.label}</div></div>
+    </div>`).join('');
+}
+
+// ============ TABS ============
+function buildTabs(){
+  document.getElementById('view-tabs').innerHTML=VIEWS.map(v=>
+    `<div class="view-tab${currentView===v.key?' active':''}" onclick="setView('${v.key}')">${v.label}</div>`
+  ).join('');
+  const titles={kanban:'Доска <span>проекта</span>',backlog:'Бэклог',sprints:'Спринты',list:'Список задач',team:'Команда'};
+  document.getElementById('tb-title').innerHTML=titles[currentView];
+}
+
+// ============ VIEWS ============
+function setView(v){currentView=v;buildTabs();buildSidebar();render();}
+function applyFilters(){render();}
+
+function render(){
+  buildStats();
+  const area=document.getElementById('scroll-area');
+  if(!area)return;
+  if(currentView==='kanban')area.innerHTML=renderKanban();
+  else if(currentView==='backlog')area.innerHTML=renderBacklog();
+  else if(currentView==='sprints')area.innerHTML=renderSprints();
+  else if(currentView==='list')area.innerHTML=renderList();
+  else if(currentView==='team')area.innerHTML=renderTeam();
+  attachDrag();
+}
+
+// KANBAN
+function renderKanban(){
+  const ft=filtered();
+  return `<div class="kanban">${STATUSES.map(s=>{
+    const cols=ft.filter(t=>t.status===s);
+    return `<div class="k-col" data-status="${s}" ondrop="drop(event,'${s}')" ondragover="dragover(event)">
+      <div class="k-col-head">
+        <div class="k-dot" style="background:${STATUS_COLORS[s]}"></div>
+        <div class="k-col-title">${s}</div>
+        <div class="k-count">${cols.length}</div>
+      </div>
+      ${cols.length?cols.map(t=>cardHTML(t)).join(''):`<div style="padding:20px 0;text-align:center;color:var(--ink4);font-size:12px">Пусто</div>`}
+    </div>`;
+  }).join('')}</div>`;
+}
+function cardHTML(t){
+  const cmtCnt=t.comment_count||0;
+  return `<div class="task-card" draggable="true" data-id="${t.id}" onclick="openTask('${t.id}')" ondragstart="dragstart(event,'${t.id}')">
+    <div class="card-tags">${typeBadge(t.type)}${prioBadge(t.priority)}</div>
+    <div class="card-title">${t.title}</div>
+    <div class="card-footer">
+      <div style="display:flex;align-items:center;gap:8px">${avEl(t.assignee,26)}${cmtCnt?`<span class="card-comment">💬 ${cmtCnt}</span>`:''}</div>
+      <span class="card-pts">${t.points||0}pt</span>
+    </div>
+  </div>`;
+}
+
+// BACKLOG
+function renderBacklog(){
+  const ft=filtered().filter(t=>t.sprint==='Бэклог'||t.status==='Бэклог');
+  if(!ft.length)return emptyState('Бэклог пуст','Все задачи в спринтах 🎉');
+  return `<div class="list-view">${ft.map(t=>`
+    <div class="list-item" onclick="openTask('${t.id}')">
+      <span style="color:${STATUS_COLORS[t.status]};font-size:15px">${TYPE_ICONS[t.type]}</span>
+      <div style="flex:1;font-size:14px;font-weight:600;color:var(--ink)">${t.title}</div>
+      ${prioBadge(t.priority)}${avEl(t.assignee,26)}
+      <span class="card-pts">${t.points||0}pt</span>
+    </div>`).join('')}</div>`;
+}
+
+// SPRINTS
+function renderSprints(){
+  return `<div class="sprint-wrap">${SPRINTS_LIST.filter(s=>s!=='Бэклог').map(sp=>{
+    const items=filtered().filter(t=>t.sprint===sp);
+    const done=items.filter(t=>t.status==='Готово').length;
+    const pct=items.length?Math.round(done/items.length*100):0;
+    const pts=items.reduce((a,t)=>a+(t.points||0),0);
+    const isActive=sp===activeSprint;
+    return `<div class="sprint-block">
+      <div class="sprint-head" onclick="toggleSprint('${sp}')">
+        <div style="flex:1">
+          <div class="sprint-name">${sp}${isActive?' <span style="font-size:11px;color:var(--accent);font-family:var(--font-mono)">· Активный</span>':''}</div>
+          <div class="sprint-info">${items.length} задач · ${pts} pts</div>
+        </div>
+        <div class="sprint-progress">
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <div class="sprint-pct">${pct}% выполнено</div>
+        </div>
+      </div>
+      ${isActive?`<div class="sprint-body">${items.length?items.map(t=>`
+        <div class="sprint-row" onclick="openTask('${t.id}')">
+          <span style="color:${STATUS_COLORS[t.status]}">${TYPE_ICONS[t.type]}</span>
+          <div class="sprint-row-title">${t.title}</div>
+          ${statusBadge(t.status)}${prioBadge(t.priority)}${avEl(t.assignee,24)}
+          <span class="card-pts">${t.points||0}pt</span>
+        </div>`).join(''):`<div style="padding:20px;text-align:center;color:var(--ink4);font-size:13px">Нет задач</div>`}
+      </div>`:''}
+    </div>`;
+  }).join('')}</div>`;
+}
+function toggleSprint(sp){activeSprint=sp;render();}
+
+// LIST
+function renderList(){
+  const ft=filtered();
+  if(!ft.length)return emptyState('Нет задач','Попробуй изменить фильтры');
+  return `<div style="background:var(--white);border-radius:var(--r2);border:1.5px solid var(--cream3);overflow:hidden;">
+    <div style="display:grid;grid-template-columns:1fr 100px 90px 120px 36px;gap:12px;padding:10px 20px;border-bottom:1.5px solid var(--cream2);font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.06em">
+      <div>Задача</div><div>Статус</div><div>Приоритет</div><div>Исполнитель</div><div>Pts</div>
+    </div>
+    ${ft.map((t,i)=>`
+    <div onclick="openTask('${t.id}')" style="display:grid;grid-template-columns:1fr 100px 90px 120px 36px;gap:12px;padding:12px 20px;border-bottom:${i<ft.length-1?'1.5px solid var(--cream2)':'none'};cursor:pointer;align-items:center;transition:background .12s"
+      onmouseover="this.style.background='var(--cream2)'" onmouseout="this.style.background=''">
+      <div style="display:flex;align-items:center;gap:10px"><span style="color:var(--ink4);font-size:14px">${TYPE_ICONS[t.type]}</span><span style="font-size:13.5px;font-weight:600;color:var(--ink)">${t.title}</span></div>
+      <div>${statusBadge(t.status)}</div>
+      <div>${prioBadge(t.priority)}</div>
+      <div style="display:flex;align-items:center;gap:6px">${avEl(t.assignee,22)}<span style="font-size:12px;color:var(--ink3)">${t.assignee}</span></div>
+      <div style="font-size:12px;font-family:var(--font-mono);color:var(--ink4)">${t.points||0}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// TEAM
+function renderTeam(){
+  return `<div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--ink)">Команда студии <span style="color:var(--ink4);font-size:14px;font-family:var(--font-ui)">${members.length} участников</span></div>
+    </div>
+    <div class="team-grid">
+      ${members.map(m=>{
+        const active=tasks.filter(t=>t.assignee===m.name&&t.status!=='Готово').length;
+        const done=tasks.filter(t=>t.assignee===m.name&&t.status==='Готово').length;
+        const isMe=m.name===currentUser?.name;
+        return `<div class="team-card">
+          <div class="team-card-actions">
+            <button class="tc-btn tc-btn-edit" onclick="editMember('${m.id}','${m.name}','${m.role||''}');event.stopPropagation()">✏️</button>
+            ${!isMe?`<button class="tc-btn tc-btn-del" onclick="deleteMember('${m.id}','${m.name}');event.stopPropagation()">✕</button>`:''}
+          </div>
+          <div class="team-av" style="background:${m.color||AV_COLORS[0]}">${m.name[0]}</div>
+          <div class="team-name">${m.name}${isMe?' <span style="font-size:10px;color:var(--accent);background:var(--cream2);border-radius:6px;padding:2px 7px;font-family:var(--font-mono)">Вы</span>':''}</div>
+          <div class="team-role">${m.role||'Участник команды'}</div>
+          <div class="team-stats">
+            <div class="team-stat"><div class="team-stat-val">${active}</div><div class="team-stat-lbl">Активных</div></div>
+            <div class="team-stat"><div class="team-stat-val" style="color:var(--green)">${done}</div><div class="team-stat-lbl">Готово</div></div>
+          </div>
+        </div>`;
+      }).join('')}
+      <div class="add-member-card" onclick="openAddMember()">
+        <div class="add-member-icon">+</div>
+        <div class="add-member-text">Добавить участника</div>
+      </div>
+    </div>
+  </div>`;
+}
+function emptyState(t,s){return `<div class="empty"><div class="empty-icon">◎</div><div class="empty-text">${t}</div><div style="font-size:13px;margin-top:6px;color:var(--ink4)">${s}</div></div>`;}
+
+// ============ DRAG ============
+function attachDrag(){
+  document.querySelectorAll('.task-card[draggable]').forEach(el=>{
+    el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+  });
+}
+function dragstart(e,id){draggingId=id;setTimeout(()=>document.querySelector(`[data-id="${id}"]`)?.classList.add('dragging'),0);}
+function dragover(e){e.preventDefault();e.currentTarget.classList.add('drag-over');}
+async function drop(e,status){
+  e.preventDefault();e.currentTarget.classList.remove('drag-over');
+  if(!draggingId)return;
+  await db.from('tasks').update({status}).eq('id',draggingId);
+  tasks=tasks.map(t=>t.id===draggingId?{...t,status}:t);
+  draggingId=null;render();
+}
+document.addEventListener('dragend',()=>document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over')));
+
+// ============ TASK MODAL ============
+async function openTask(id){
+  const t=tasks.find(x=>x.id==id);if(!t)return;
+  const comments=await loadComments(id);
+  showModal(`
+    <div class="modal-header">${typeBadge(t.type)}${statusBadge(t.status)}${prioBadge(t.priority)}</div>
+    <div class="modal-title">${t.title}</div>
+    <p class="modal-desc">${t.description||'<em style="color:var(--ink4)">Нет описания</em>'}</p>
+    <div class="modal-actions">
+      <button class="btn-sec" onclick="openCreateEdit('${id}')">✏️ Изменить</button>
+      <button class="btn-sec" onclick="cycleStatus('${id}')">↻ Статус</button>
+      <button class="btn-sec btn-danger" onclick="deleteTask('${id}')">✕ Удалить</button>
+    </div>
+    <div class="modal-grid">
+      <div class="modal-field"><label>Исполнитель</label><div class="modal-field-val">${avEl(t.assignee,24)}<span>${t.assignee}</span></div></div>
+      <div class="modal-field"><label>Спринт</label><div class="modal-field-val">${t.sprint}</div></div>
+      <div class="modal-field"><label>Story Points</label><div class="modal-field-val"><span style="font-family:var(--font-mono);font-size:15px;font-weight:800;color:var(--accent)">${t.points||0}</span> pts</div></div>
+      <div class="modal-field"><label>Тип</label><div class="modal-field-val">${TYPE_ICONS[t.type]} ${t.type}</div></div>
+    </div>
+    <div class="comment-section">
+      <div class="comment-title">💬 Комментарии <span style="background:var(--cream2);border-radius:99px;padding:2px 8px;font-size:11px;font-family:var(--font-mono)">${comments.length}</span></div>
+      <div id="comments-list">${comments.map(c=>`
+        <div class="comment-item">
+          ${avEl(c.author,30)}
+          <div class="comment-bubble">
+            <span class="comment-author">${c.author}</span>
+            <span class="comment-date">${new Date(c.created_at).toLocaleDateString('ru',{day:'numeric',month:'short'})}</span>
+            <div class="comment-text">${c.text}</div>
+          </div>
+        </div>`).join('')||'<div style="font-size:13px;color:var(--ink4);padding:8px 0">Пока нет комментариев</div>'}
+      </div>
+      <div class="comment-input-wrap">
+        <input class="comment-input" id="new-comment" placeholder="Написать комментарий…" onkeydown="if(event.key==='Enter')addComment('${id}')"/>
+        <button class="comment-send" onclick="addComment('${id}')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>`);
+}
+
+async function addComment(taskId){
+  const inp=document.getElementById('new-comment');
+  const text=inp.value.trim();if(!text)return;
+  await db.from('comments').insert({task_id:taskId,author:currentUser?.name||'Гость',text});
+  // Update comment count
+  const {count}=await db.from('comments').select('*',{count:'exact',head:true}).eq('task_id',taskId);
+  await db.from('tasks').update({comment_count:count}).eq('id',taskId);
+  tasks=tasks.map(t=>t.id==taskId?{...t,comment_count:count}:t);
+  inp.value='';
+  openTask(taskId);
+}
+
+async function cycleStatus(id){
+  const t=tasks.find(x=>x.id==id);if(!t)return;
+  const next=STATUSES[(STATUSES.indexOf(t.status)+1)%STATUSES.length];
+  await db.from('tasks').update({status:next}).eq('id',id);
+  tasks=tasks.map(x=>x.id==id?{...x,status:next}:x);
+  openTask(id);render();
+}
+
+async function deleteTask(id){
+  if(!confirm('Удалить задачу?'))return;
+  await db.from('comments').delete().eq('task_id',id);
+  await db.from('tasks').delete().eq('id',id);
+  tasks=tasks.filter(t=>t.id!=id);
+  closeModal();render();showToast('Задача удалена');
+}
+
+// ============ CREATE / EDIT ============
+function openCreate(){openCreateEdit(null);}
+function openCreateEdit(id){
+  const t=id?tasks.find(x=>x.id==id):null;
+  const memberOpts=members.map(m=>`<option${(t?.assignee||currentUser?.name)===m.name?' selected':''}>${m.name}</option>`).join('');
+  const sprintOpts=SPRINTS_LIST.map(s=>`<option${(t?.sprint||'Бэклог')===s?' selected':''}>${s}</option>`).join('');
+  showModal(`
+    <div style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--ink);margin-bottom:20px">${t?'Редактировать задачу':'Новая задача'}</div>
+    <div class="create-form">
+      <div class="form-group"><label>Название *</label><input class="form-input" id="f-title" value="${t?.title||''}" placeholder="Краткое название"/></div>
+      <div class="form-group"><label>Описание</label><textarea class="form-textarea" id="f-desc" placeholder="Подробное описание…">${t?.description||''}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Тип</label><select class="form-select" id="f-type">${TYPES.map(x=>`<option${(t?.type||'Задача')===x?' selected':''}>${x}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Статус</label><select class="form-select" id="f-status">${STATUSES.map(x=>`<option${(t?.status||'Бэклог')===x?' selected':''}>${x}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Приоритет</label><select class="form-select" id="f-priority">${PRIORITIES.map(x=>`<option${(t?.priority||'Средний')===x?' selected':''}>${x}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Исполнитель</label><select class="form-select" id="f-assignee">${memberOpts}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Спринт</label><select class="form-select" id="f-sprint">${sprintOpts}</select></div>
+        <div class="form-group"><label>Story Points</label><input class="form-input" type="number" id="f-points" value="${t?.points||3}" min="0" max="99"/></div>
+      </div>
+      <div class="form-footer">
+        <button class="btn-primary" onclick="saveTask(${id||'null'})">${t?'Сохранить':'Создать →'}</button>
+        <button class="btn-sec" onclick="closeModal()">Отмена</button>
+      </div>
+    </div>`);
+}
+
+async function saveTask(id){
+  const get=x=>document.getElementById(x)?.value||'';
+  const title=get('f-title').trim();if(!title)return alert('Введи название');
+  const data={title,description:get('f-desc'),type:get('f-type'),status:get('f-status'),priority:get('f-priority'),assignee:get('f-assignee'),sprint:get('f-sprint'),points:parseInt(get('f-points'))||0};
+  if(id&&id!='null'){
+    await db.from('tasks').update(data).eq('id',id);
+    tasks=tasks.map(t=>t.id==id?{...t,...data}:t);
+    showToast('Задача обновлена ✦');
+  }else{
+    const {data:inserted}=await db.from('tasks').insert({...data,created_by:currentUser?.name||'',comment_count:0}).select().single();
+    if(inserted)tasks=[inserted,...tasks];
+    showToast('Задача создана ✦');
+  }
+  closeModal();render();
+}
+
+// ============ TEAM MANAGEMENT ============
+function openAddMember(){
+  showModal(`
+    <div style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--ink);margin-bottom:20px">➕ Новый участник</div>
+    <div class="create-form">
+      <div class="form-group"><label>Имя *</label><input class="form-input" id="m-name" placeholder="Имя сотрудника"/></div>
+      <div class="form-group"><label>Роль</label><input class="form-input" id="m-role" placeholder="Например: UI/UX Дизайнер"/></div>
+      <div class="form-footer">
+        <button class="btn-primary" onclick="saveMember(null)">Добавить →</button>
+        <button class="btn-sec" onclick="closeModal()">Отмена</button>
+      </div>
+    </div>`);
+}
+function editMember(id,name,role){
+  showModal(`
+    <div style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--ink);margin-bottom:20px">✏️ Редактировать участника</div>
+    <div class="create-form">
+      <div class="form-group"><label>Имя *</label><input class="form-input" id="m-name" value="${name}"/></div>
+      <div class="form-group"><label>Роль</label><input class="form-input" id="m-role" value="${role}"/></div>
+      <div class="form-footer">
+        <button class="btn-primary" onclick="saveMember('${id}')">Сохранить →</button>
+        <button class="btn-sec" onclick="closeModal()">Отмена</button>
+      </div>
+    </div>`);
+}
+async function saveMember(id){
+  const name=document.getElementById('m-name').value.trim();
+  const role=document.getElementById('m-role').value.trim()||'Участник команды';
+  if(!name)return alert('Введи имя');
+  const colorIdx=Math.floor(Math.random()*AV_COLORS.length);
+  if(id&&id!='null'){
+    await db.from('members').update({name,role}).eq('id',id);
+    members=members.map(m=>m.id==id?{...m,name,role}:m);
+    showToast('Участник обновлён');
+  }else{
+    const {data}=await db.from('members').insert({name,role,color:AV_COLORS[colorIdx]}).select().single();
+    if(data)members=[...members,data];
+    showToast('Участник добавлен ✦');
+  }
+  closeModal();buildSidebar();updateAssigneeFilter();if(currentView==='team')render();
+}
+async function deleteMember(id,name){
+  if(!confirm(`Удалить ${name} из команды?`))return;
+  await db.from('members').delete().eq('id',id);
+  members=members.filter(m=>m.id!=id);
+  buildSidebar();updateAssigneeFilter();
+  if(currentView==='team')render();
+  showToast('Участник удалён');
+}
+
+// ============ MODAL ============
+function showModal(html){
+  document.getElementById('modal-content').innerHTML=html;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('modal-overlay'))return;
+  document.getElementById('modal-overlay').style.display='none';
+}
+let touchStartY=0;
+document.getElementById('modal-sheet').addEventListener('touchstart',e=>touchStartY=e.touches[0].clientY);
+document.getElementById('modal-sheet').addEventListener('touchend',e=>{
+  if(e.changedTouches[0].clientY-touchStartY>80)document.getElementById('modal-overlay').style.display='none';
+});
+
+// ============ PWA ============
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  const b=document.getElementById('install-banner');b.style.display='flex';
+  document.getElementById('install-btn').onclick=async()=>{
+    b.style.display='none';await deferredPrompt.prompt();deferredPrompt=null;
+  };
+});
+
+// ============ SQL HELPER ============
+// Show SQL setup instructions if tables don't exist
+async function checkTablesExist(){
+  const {error}=await db.from('tasks').select('id').limit(1);
+  if(error&&error.code==='42P01'){
+    showSQLHelper();return false;
+  }
+  return true;
+}
+
+function showSQLHelper(){
+  const sql=`-- Запусти этот SQL в Supabase Dashboard → SQL Editor
+CREATE TABLE IF NOT EXISTS members (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name text UNIQUE NOT NULL,
+  role text,
+  color text,
+  last_seen timestamptz,
+  created_at timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS tasks (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  title text NOT NULL,
+  description text,
+  type text DEFAULT 'Задача',
+  status text DEFAULT 'Бэклог',
+  priority text DEFAULT 'Средний',
+  assignee text,
+  sprint text DEFAULT 'Бэклог',
+  points int DEFAULT 3,
+  comment_count int DEFAULT 0,
+  created_by text,
+  created_at timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS comments (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  task_id uuid REFERENCES tasks(id) ON DELETE CASCADE,
+  author text,
+  text text,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "allow_all" ON tasks FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "allow_all" ON members FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "allow_all" ON comments FOR ALL USING (true) WITH CHECK (true);`;
+  document.getElementById('app').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+  document.querySelector('.setup-card').innerHTML=`
+    <div class="setup-logo">!</div>
+    <div class="setup-title">Создай таблицы</div>
+    <div class="setup-sub">Зайди в <strong>Supabase → SQL Editor</strong> и выполни этот код один раз:</div>
+    <textarea style="width:100%;height:280px;background:var(--ink);color:#A5F3A0;font-family:var(--font-mono);font-size:11px;border:none;border-radius:12px;padding:16px;resize:none;outline:none;line-height:1.6">${sql}</textarea>
+    <button class="setup-btn" style="margin-top:12px" onclick="location.reload()">Готово, перезагрузить →</button>
+    <button class="setup-btn" style="background:var(--cream2);color:var(--ink);margin-top:8px;box-shadow:none" onclick="copySQL()">📋 Скопировать SQL</button>`;
+}
+function copySQL(){
+  const ta=document.querySelector('textarea');
+  navigator.clipboard?.writeText(ta.value)||ta.select();
+  showToast('SQL скопирован!');
+}
+
+// ============ INIT ============
+checkSavedCredentials();
+</script>
+</body>
+</html>
